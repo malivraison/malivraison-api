@@ -7,7 +7,6 @@ module.exports = async function handler(req, res) {
     const body = req.body || {};
 
     const apiKey = process.env.API_KEY_BOXTAL;
-
     if (!apiKey) {
       return res.status(500).json({ error: "Clé API Boxtal manquante côté serveur" });
     }
@@ -15,9 +14,9 @@ module.exports = async function handler(req, res) {
     const sender = {
       name: body["sender[name]"],
       company: body["sender[company]"] || "",
-      address: body["sender[address]"],
-      address2: body["sender[address2]"] || "",
-      zip: body["sender[zip]"],
+      street: body["sender[address]"],
+      street2: body["sender[address2]"] || "",
+      zipCode: body["sender[zip]"],
       city: body["sender[city]"],
       country: body["sender[country]"] || "FR",
       phone: body["sender[phone]"],
@@ -27,9 +26,9 @@ module.exports = async function handler(req, res) {
     const recipient = {
       name: body["recipient[name]"],
       company: body["recipient[company]"] || "",
-      address: body["recipient[address]"],
-      address2: body["recipient[address2]"] || "",
-      zip: body["recipient[zip]"],
+      street: body["recipient[address]"],
+      street2: body["recipient[address2]"] || "",
+      zipCode: body["recipient[zip]"],
       city: body["recipient[city]"],
       country: body["recipient[country]"] || "FR",
       phone: body["recipient[phone]"],
@@ -41,7 +40,7 @@ module.exports = async function handler(req, res) {
       type: body["parcel[type]"] || "parcel"
     };
 
-    const carrier = body["carrier"] || "";
+    const carrier = body["carrier"] || undefined;
 
     const boxtalResponse = await fetch("https://api.boxtal.com/v2/shipments", {
       method: "POST",
@@ -53,7 +52,7 @@ module.exports = async function handler(req, res) {
         sender,
         recipient,
         parcel,
-        carrier: carrier || undefined
+        carrier
       })
     });
 
@@ -73,7 +72,6 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Erreur serveur :", error);
     return res.status(500).json({
       error: "Erreur interne du serveur",
       details: error.message
