@@ -59,11 +59,13 @@ module.exports = async function handler(req, res) {
     const data = await boxtalResponse.json();
 
     if (!boxtalResponse.ok) {
-      return res.status(400).json({
-        error: "Erreur Boxtal",
-        details: data
-      });
-    }
+  console.log("Boxtal ERROR:", data); // 🔍 LOG COMPLET
+  return res.status(400).json({
+    error: "Erreur Boxtal",
+    details: data,
+    sent_payload: { sender, recipient, parcel, carrier } // 🔍 CE QU’ON A ENVOYÉ
+  });
+}
 
     return res.status(200).json({
       success: true,
