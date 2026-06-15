@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     }
 
     // Appel API Boxtal
-    const response = await fetch("https://api.boxtal.com/v2/shipments", {
+    const response = await fetch("https://api.boxtal.com/v3/shipments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
