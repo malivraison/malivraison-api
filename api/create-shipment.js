@@ -42,7 +42,7 @@ module.exports = async function handler(req, res) {
 
     const carrier = body["carrier"] || undefined;
 
-    const boxtalResponse = await fetch("https://api.boxtal.com/v3/shipments", {
+    const boxtalResponse = await fetch("https://api-sandbox.boxtal.com/v3/shipments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
