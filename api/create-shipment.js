@@ -1,16 +1,33 @@
-module.exports = async function handler(req, res) {
+import { parse } from "querystring";
+
+export const config = {
+  api: {
+    bodyParser: false, // On désactive pour gérer le form-data manuellement
+  },
+};
+
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Méthode non autorisée" });
   }
 
   try {
-    const body = req.body || {};
+    // 🔥 1) Lire le form-data envoyé par ton formulaire HTML
+    const rawBody = await new Promise((resolve) => {
+      let data = "";
+      req.on("data", (chunk) => (data += chunk));
+      req.on("end", () => resolve(data));
+    });
 
+    const body = parse(rawBody);
+
+    // 🔥 2) Récupérer la clé API depuis Vercel
     const apiKey = process.env.API_KEY_BOXTAL;
     if (!apiKey) {
       return res.status(500).json({ error: "Clé API Boxtal manquante côté serveur" });
     }
 
+    // 🔥 3) Construire le payload Boxtal
     const sender = {
       name: body["sender[name]"],
       company: body["sender[company]"] || "",
@@ -20,7 +37,7 @@ module.exports = async function handler(req, res) {
       city: body["sender[city]"],
       country: body["sender[country]"] || "FR",
       phone: body["sender[phone]"],
-      email: body["sender[email]"]
+      email: body["sender[email]"],
     };
 
     const recipient = {
@@ -32,51 +49,56 @@ module.exports = async function handler(req, res) {
       city: body["recipient[city]"],
       country: body["recipient[country]"] || "FR",
       phone: body["recipient[phone]"],
-      email: body["recipient[email]"]
+      email: body["recipient[email]"],
     };
 
     const parcel = {
       weight: Number(body["parcel[weight]"] || 1),
-      type: body["parcel[type]"] || "parcel"
+      type: body["parcel[type]"] || "parcel",
     };
 
     const carrier = body["carrier"] || undefined;
 
+    // 🔥 4) Appel API SANDBOX Boxtal
     const boxtalResponse = await fetch("https://api-sandbox.boxtal.com/v3/shipments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-KEY": apiKey
+        "X-API-KEY": apiKey,
       },
       body: JSON.stringify({
         sender,
         recipient,
         parcel,
-        carrier
-      })
+        carrier,
+      }),
+    }).catch((err) => {
+      console.error("FETCH ERROR:", err);
+      throw new Error("Boxtal unreachable");
     });
 
     const data = await boxtalResponse.json();
 
     if (!boxtalResponse.ok) {
-  console.log("Boxtal ERROR:", data); // 🔍 LOG COMPLET
-  return res.status(400).json({
-    error: "Erreur Boxtal",
-    details: data,
-    sent_payload: { sender, recipient, parcel, carrier } // 🔍 CE QU’ON A ENVOYÉ
-  });
-}
+      console.log("Boxtal ERROR:", data);
+      return res.status(400).json({
+        error: "Erreur Boxtal",
+        details: data,
+        sent_payload: { sender, recipient, parcel, carrier },
+      });
+    }
 
+    // 🔥 5) Succès
     return res.status(200).json({
       success: true,
       payment_url: data?.payment?.url || null,
-      boxtal_response: data
+      boxtal_response: data,
     });
-
   } catch (error) {
+    console.error("SERVER ERROR:", error);
     return res.status(500).json({
       error: "Erreur interne du serveur",
-      details: error.message
+      details: error.message,
     });
   }
-};
+}
