@@ -57,20 +57,20 @@ export default async function handler(req, res) {
     const carrier = body["carrier"] || undefined;
 
     // 🔥 Appel API SANDBOX Boxtal
-    const boxtalResponse = await fetch("https://api.boxtal.build/shipping/v3/shipments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-KEY": apiKey,
-      },
-      body: JSON.stringify({
-        sender,
-        recipient,
-        parcel,
-        carrier,
-      }),
-    });
-
+   const boxtalResponse = await fetch("https://api.boxtal.build/v3.1/shipping-order", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-KEY": apiKey,
+  },
+  body: JSON.stringify({
+    sender,
+    recipient,
+    parcel,
+    shippingOfferCode: carrier, // obligatoire pour créer une commande
+  }),
+});
+    
     const data = await boxtalResponse.json();
 
     if (!boxtalResponse.ok) {
