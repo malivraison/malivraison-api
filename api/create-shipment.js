@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     const carrier = body["carrier"] || undefined;
 
     // 🔥 4) Appel API SANDBOX Boxtal
-    const boxtalResponse = await fetch("https://api-sandbox.boxtal.com/v3/shipments", {
+    const boxtalResponse = await fetch("https://api.boxtal.com/v1/shipments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
